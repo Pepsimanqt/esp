@@ -1,0 +1,83 @@
+-- Assuming you have a UI library that allows you to create tabs and toggles
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("User InputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Create a variable to track ESP state
+local espEnabled = false
+
+-- Function to create a box ESP for a player
+function createBoxESP(player)
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local rootPart = character.HumanoidRootPart
+
+        -- Create a BillboardGui to display the ESP
+        local espGui = Instance.new("BillboardGui")
+        espGui.Size = UDim2.new(3.5, 0, 5, 0) -- Adjust size to fit the player model
+        espGui.Adornee = rootPart
+        espGui.AlwaysOnTop = true
+        espGui.Parent = workspace
+
+        -- Create a Frame to represent the box
+        local boxFrame = Instance.new("Frame")
+        boxFrame.Size = UDim2.new(1, 0, 1, 0) -- Full size of the BillboardGui
+        boxFrame.BackgroundColor3 = Color3.new(1, 0, 0) -- Red color for visibility
+        boxFrame.BackgroundTransparency = 0.5 -- Semi-transparent
+        boxFrame.Parent = espGui
+
+        -- Create a label with the player's name
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Size = UDim2.new(1, 0, 0.2, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.TextColor3 = Color3.new(1, 1, 1)
+        nameLabel.Text = player.Name
+        nameLabel.TextScaled = true
+        nameLabel.Parent = espGui
+
+        -- Position the name label above the box
+        nameLabel.Position = UDim2.new(0, 0, -0.5, 0)
+    end
+end
+
+-- Function to remove box ESP from a player
+function removeBoxESP(player)
+    for _, gui in pairs(workspace:GetChildren()) do
+        if gui:IsA("BillboardGui") and gui.Adornee and gui.Adornee.Parent == player.Character then
+            gui:Destroy()
+        end
+    end
+end
+
+-- Main function to loop through players and create ESP
+function ESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            createBoxESP(player)
+        end
+    end
+end
+
+-- Connect to player added event to create ESP for new players
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if espEnabled then
+            createBoxESP(player)
+        end
+    end)
+end)
+
+-- Initial ESP setup
+ESP()
+
+-- Function to toggle ESP
+local function toggleESP(value)
+    espEnabled = value
+    if espEnabled then
+        ESP() -- Create ESP for existing players
+    else
+        for _, player in pairs(Players:GetPlayers()) do
+            removeBoxESP(player)
+        end
+    end
+end
